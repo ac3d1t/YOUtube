@@ -1,58 +1,69 @@
-<script>
-    const log = document.getElementById('log');
-    const grid = document.getElementById('grid');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Client</title>
+    <style>
+        body { background: #0f0f0f; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: #1a1a1a; border-radius: 8px; overflow: hidden; cursor: pointer; }
+        .card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .info { padding: 10px; }
+        #error-display { color: #ff4444; background: #220000; padding: 10px; margin-bottom: 20px; display: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
 
-    // We are going to use a different set of reliable instances
-    const SOURCES = [
-        "https://invidious.flokinet.to/api/v1/trending",
-        "https://iv.melmac.space/api/v1/trending",
-        "https://invidious.sethforprivacy.com/api/v1/trending"
-    ];
+    <h1>Home</h1>
+    <div id="error-display"></div>
+    <div id="main-grid" class="grid">Loading videos...</div>
 
-    async function fetchVideos() {
-        grid.innerHTML = "";
-        log.innerHTML = "Performing deep scan...";
+    <script>
+        const displayError = (msg) => {
+            const el = document.getElementById('error-display');
+            el.style.display = 'block';
+            el.innerHTML = `<strong>Error:</strong> ${msg}`;
+        };
 
-        for (let url of SOURCES) {
+        async function init() {
+            const grid = document.getElementById('main-grid');
+            // Testing the most reliable 2026 instance
+            const api_url = "https://inv.tux.pizza/api/v1/trending";
+
             try {
-                log.innerHTML += `<br>Scanning ${url.split('/')[2]}...`;
+                const response = await fetch(api_url);
+                if (!response.ok) throw new Error("Server rejected the request.");
                 
-                // Using a 'Cloudflare Worker' style proxy which is much harder for YT to block
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-                
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error();
-
                 const data = await response.json();
                 
-                if (data && data.length > 0) {
-                    log.innerHTML += `<br><span style="color:lightgreen">Connection Established!</span>`;
-                    render(data);
+                if (!data || data.length === 0) {
+                    grid.innerHTML = "No videos found.";
                     return;
                 }
-            } catch (e) {
-                log.innerHTML += `<br><span style="color:red">Instance Refused.</span>`;
+
+                grid.innerHTML = "";
+                data.forEach(v => {
+                    const card = document.createElement('div');
+                    card.className = "card";
+                    card.innerHTML = `
+                        <img src="${v.videoThumbnails[0].url}">
+                        <div class="info">
+                            <div style="font-weight:bold">${v.title}</div>
+                            <div style="color:#aaa; font-size:12px">${v.author}</div>
+                        </div>
+                    `;
+                    card.onclick = () => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank');
+                    grid.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error(err);
+                displayError("Could not load feed. This usually means the API is down or blocking your browser.");
+                grid.innerHTML = "Feed failed to load.";
             }
         }
-        log.innerHTML += `<br><strong>Critical Failure:</strong> All endpoints are currently rate-limited by YouTube.`;
-    }
 
-    function render(videos) {
-        videos.forEach(v => {
-            const card = document.createElement('div');
-            card.className = "card";
-            // Invidious API uses 'videoThumbnails' array
-            const thumb = v.videoThumbnails ? v.videoThumbnails[0].url : v.thumbnail;
-            
-            card.innerHTML = `
-                <img class="thumb" src="${thumb}" onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumbnail'">
-                <div class="title">${v.title}</div>
-                <div class="meta">${v.author} • ${v.publishedText || 'Recent'}</div>
-            `;
-            card.onclick = () => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank');
-            grid.appendChild(card);
-        });
-    }
-
-    fetchVideos();
-</script>
+        init();
+    </script>
+</body>
+</html>

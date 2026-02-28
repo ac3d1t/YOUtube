@@ -5,256 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Client</title>
     <style>
-        :root {
-            --yt-black: #0f0f0f;
-            --yt-card-bg: #1e1e1e;
-            --yt-text: #ffffff;
-            --yt-grey: #aaaaaa;
-            --yt-border: #3f3f3f;
-            --yt-red: #ff0000;
-        }
-
-        body {
-            background-color: var(--yt-black);
-            color: var(--yt-text);
-            font-family: "Roboto", Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        /* Top Navigation */
-        nav {
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            background: var(--yt-black);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: -1px;
-        }
-
-        .logo-icon {
-            color: var(--yt-red);
-            margin-right: 4px;
-            font-size: 24px;
-        }
-
-        /* Search Bar Area */
-        .search-container {
-            flex: 0 1 728px;
-            display: flex;
-            align-items: center;
-        }
-
-        input {
-            width: 100%;
-            background: #121212;
-            border: 1px solid var(--yt-border);
-            border-radius: 40px 0 0 40px;
-            padding: 8px 16px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-
-        /* Main Content Layout */
-        .wrapper {
-            display: flex;
-            flex: 1;
-        }
-
-        aside {
-            width: 240px;
-            padding-top: 12px;
-            border-right: 1px solid transparent;
-        }
-
-        .nav-item {
-            padding: 10px 24px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .nav-item:hover {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            margin: 0 10px;
-        }
-
-        /* Video Grid */
-        main {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-        }
-
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-
-        .video-card {
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .thumbnail-box {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #2a2a2a;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .thumbnail-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .video-details {
-            display: flex;
-            margin-top: 12px;
-            gap: 12px;
-        }
-
-        .channel-pfp {
-            width: 36px;
-            height: 36px;
-            background: #333;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .meta-text h3 {
-            margin: 0;
-            font-size: 16px;
-            line-height: 2.2rem;
-            max-height: 4.4rem;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        .meta-text p {
-            margin: 4px 0 0 0;
-            font-size: 14px;
-            color: var(--yt-grey);
-        }
-
-        .status-banner {
-            grid-column: 1/-1;
-            text-align: center;
-            padding: 40px;
-            color: var(--yt-grey);
-        }
+        :root { --yt-black: #0f0f0f; --yt-text: #ffffff; --yt-grey: #aaaaaa; --yt-border: #3f3f3f; --yt-red: #ff0000; }
+        body { background-color: var(--yt-black); color: var(--yt-text); font-family: "Roboto", sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        nav { height: 56px; display: flex; align-items: center; padding: 0 16px; background: var(--yt-black); border-bottom: 1px solid var(--yt-border); }
+        .wrapper { display: flex; flex: 1; overflow: hidden; }
+        aside { width: 240px; padding: 12px; border-right: 1px solid #222; }
+        main { flex: 1; padding: 24px; overflow-y: auto; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { cursor: pointer; }
+        .thumb { width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 12px; object-fit: cover; }
+        .title { font-size: 16px; margin: 10px 0 5px 0; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .meta { color: var(--yt-grey); font-size: 14px; }
+        .status { padding: 20px; color: var(--yt-grey); font-family: monospace; font-size: 12px; }
+        button { background: #333; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #444; }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo-section">
-            <span class="logo-icon">▶</span> VideoClient
-        </div>
-        <div class="search-container">
-            <input type="text" placeholder="Search">
-        </div>
-        <div></div> </nav>
+        <div style="font-weight: bold; font-size: 20px;"><span style="color:red">▶</span> VideoClient</div>
+    </nav>
 
     <div class="wrapper">
         <aside>
-            <div class="nav-item" onclick="loadTrending()">Home</div>
-            <div class="nav-item">Trending</div>
-            <div class="nav-item">Subscribers</div>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 12px 0;">
-            <div class="nav-item">Library</div>
-            <div class="nav-item">Settings</div>
+            <button onclick="fetchVideos()" style="width:100%">Refresh Feed</button>
+            <div id="log" class="status">Initializing...</div>
         </aside>
 
-        <main id="content">
-            <div class="video-grid" id="video-grid">
-                <div class="status-banner">Connecting to secure instances...</div>
-            </div>
+        <main>
+            <div class="video-grid" id="grid"></div>
         </main>
     </div>
 
     <script>
-        const API_INSTANCES = [
-            "https://pipedapi.kavin.rocks",
-            "https://api.piped.victr.me",
-            "https://pipedapi.leptons.xyz",
-            "https://yt.artemislena.eu"
+        const log = document.getElementById('log');
+        const grid = document.getElementById('grid');
+
+        // Mixed sources: Piped and Invidious
+        const SOURCES = [
+            { name: "Piped (Kavin)", url: "https://pipedapi.kavin.rocks/trending?region=US", type: "piped" },
+            { name: "Invidious (LND)", url: "https://invidious.lunar.icu/api/v1/trending", type: "invidious" },
+            { name: "Invidious (Privacy)", url: "https://inv.tux.pizza/api/v1/trending", type: "invidious" },
+            { name: "Piped (Rivo)", url: "https://pipedapi.rivo.gg/trending?region=US", type: "piped" }
         ];
 
-        async function loadTrending() {
-            const grid = document.getElementById('video-grid');
-            
-            for (let url of API_INSTANCES) {
-                try {
-                    // Using a CORS proxy to ensure the connection isn't blocked by the browser
-                    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(`${url}/trending?region=US`);
-                    const response = await fetch(proxyUrl);
-                    
-                    if (!response.ok) continue;
+        async function fetchVideos() {
+            grid.innerHTML = "";
+            log.innerHTML = "Starting source scan...";
 
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        renderFeed(data);
+            for (let src of SOURCES) {
+                try {
+                    log.innerHTML += `<br>Trying ${src.name}...`;
+                    
+                    // Using a different proxy for better compatibility
+                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(src.url)}`);
+                    const wrapper = await response.json();
+                    const data = JSON.parse(wrapper.contents);
+
+                    if (data && (data.length > 0 || data.items)) {
+                        log.innerHTML += `<br><span style="color:lightgreen">Success!</span>`;
+                        render(data, src.type);
                         return;
                     }
                 } catch (e) {
-                    console.error("Instance failed: " + url);
+                    log.innerHTML += `<br><span style="color:red">Failed.</span>`;
                 }
             }
-            grid.innerHTML = `<div class="status-banner">Error: All instances currently unreachable. Please refresh in a moment.</div>`;
+            log.innerHTML += `<br><strong>All sources failed. YouTube is blocking proxies.</strong>`;
         }
 
-        function renderFeed(videos) {
-            const grid = document.getElementById('video-grid');
-            grid.innerHTML = '';
-
+        function render(data, type) {
+            const videos = type === "invidious" ? data : data; // Both return arrays
+            
             videos.forEach(v => {
-                // Filter out Shorts (under 60 seconds)
-                if (v.duration < 60) return;
+                // Handle different naming conventions between APIs
+                const title = v.title;
+                const author = v.author || v.uploaderName;
+                const thumb = v.videoThumbnails ? v.videoThumbnails[0].url : v.thumbnail;
+                const videoId = v.videoId || v.url.split("=")[1] || v.url.split("/").pop();
 
                 const card = document.createElement('div');
-                card.className = 'video-card';
+                card.className = "card";
                 card.innerHTML = `
-                    <div class="thumbnail-box">
-                        <img src="${v.thumbnail}" loading="lazy">
-                    </div>
-                    <div class="video-details">
-                        <div class="channel-pfp"></div>
-                        <div class="meta-text">
-                            <h3>${v.title}</h3>
-                            <p>${v.uploaderName}</p>
-                            <p>${v.shortDescription || ''} ${v.uploadedDate}</p>
-                        </div>
-                    </div>
+                    <img class="thumb" src="${thumb}">
+                    <div class="title">${title}</div>
+                    <div class="meta">${author}</div>
                 `;
-                // Open in a clean player
-                card.onclick = () => window.open(`https://piped.video${v.url}`, '_blank');
+                card.onclick = () => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
                 grid.appendChild(card);
             });
         }
 
-        // Auto-load on startup
-        loadTrending();
+        fetchVideos();
     </script>
 </body>
 </html>

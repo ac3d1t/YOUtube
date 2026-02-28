@@ -47,23 +47,65 @@
                     card.className = "card";
                     card.innerHTML = `
                         <img src="${v.videoThumbnails[0].url}">
-                        <div class="info">
-                            <div style="font-weight:bold">${v.title}</div>
-                            <div style="color:#aaa; font-size:12px">${v.author}</div>
-                        </div>
-                    `;
-                    card.onclick = () => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank');
-                    grid.appendChild(card);
-                });
+                        <d<script>
+    const grid = document.getElementById('main-grid');
+    const errorEl = document.getElementById('error-display');
 
+    // These are the most stable Invidious instances for 2026
+    const INSTANCES = [
+        "https://inv.tux.pizza",
+        "https://invidious.lunar.icu",
+        "https://iv.melmac.space",
+        "https://invidious.projectsegfau.lt"
+    ];
+
+    async function init() {
+        grid.innerHTML = "Searching for a live connection...";
+        
+        for (let base of INSTANCES) {
+            try {
+                // Using 'allorigins' to wrap the request and bypass CORS blocks
+                const target = `${base}/api/v1/trending?region=US`;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
+                
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Next...");
+
+                const wrapper = await response.json();
+                const data = JSON.parse(wrapper.contents);
+                
+                if (data && data.length > 0) {
+                    render(data);
+                    return; // Stop once we find a working one!
+                }
             } catch (err) {
-                console.error(err);
-                displayError("Could not load feed. This usually means the API is down or blocking your browser.");
-                grid.innerHTML = "Feed failed to load.";
+                console.log(`Skipping ${base} - busy or blocked.`);
             }
         }
+        
+        grid.innerHTML = "All instances are busy. Try clicking 'Refresh' in a minute.";
+    }
 
-        init();
-    </script>
+    function render(videos) {
+        grid.innerHTML = "";
+        videos.forEach(v => {
+            const card = document.createElement('div');
+            card.className = "card";
+            const thumb = v.videoThumbnails ? v.videoThumbnails[0].url : "";
+            
+            card.innerHTML = `
+                <img src="${thumb}" onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumb'">
+                <div class="info">
+                    <div style="font-weight:bold; font-size: 14px; margin-bottom: 4px;">${v.title}</div>
+                    <div style="color:#aaa; font-size:12px">${v.author}</div>
+                </div>
+            `;
+            card.onclick = () => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank');
+            grid.appendChild(card);
+        });
+    }
+
+    init();
+</script>
 </body>
 </html>

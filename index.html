@@ -4,211 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeTube // Anti-Buns</title>
-    
     <style>
-        /* --- THE VIBE (CSS) --- */
-        :root {
-            --bg: #0a0a0a;
-            --card-bg: #161616;
-            --accent: #bc13fe; /* Neon Purple */
-            --text: #ffffff;
-            --text-dim: #888;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        /* Clean Glass Navbar */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background: rgba(15, 15, 15, 0.8);
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #222;
-        }
-
-        .logo {
-            font-weight: 800;
-            letter-spacing: -1px;
-            color: var(--accent);
-            font-size: 1.5rem;
-        }
-
-        /* The Grid - No Clutter */
-        .feed-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* Video Card Styling */
-        .video-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid #222;
-        }
-
-        .video-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(188, 19, 254, 0.2);
-            border-color: var(--accent);
-        }
-
-        .thumbnail-container {
-            position: relative;
-            aspect-ratio: 16 / 9;
-        }
-
-        .thumbnail-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .duration {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.8);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-        }
-
-        .video-info {
-            padding: 12px;
-        }
-
-        .video-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .video-meta {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-        }
-
-        /* Filter Controls */
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background: #222;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        button:hover {
-            background: var(--accent);
-        }
+        :root { --bg: #0a0a0a; --card-bg: #161616; --accent: #bc13fe; --text: #ffffff; --text-dim: #888; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; }
+        nav { display: flex; justify-content: space-between; padding: 1rem 2rem; background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 100; }
+        .logo { font-weight: 800; color: var(--accent); font-size: 1.5rem; }
+        .feed-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; padding: 2rem; }
+        .video-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid #222; cursor: pointer; transition: 0.2s; }
+        .video-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .video-info { padding: 12px; }
+        .video-title { font-size: 0.95rem; font-weight: 600; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .status-msg { grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 20px; }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo">VIBETUBE</div>
-        <div class="controls">
-            <button onclick="loadFeed()">Refresh</button>
-        </div>
+        <button onclick="loadFeed()">Refresh Feed</button>
     </nav>
 
     <div class="feed-container" id="main-feed">
-        </div>
+        <div class="status-msg">Initiating vibe-check...</div>
+    </div>
 
     <script>
-        /* --- THE LOGIC (JS) --- */
-        
-        // Using a reliable public Piped API instance
-        const API_BASE = "https://pipedapi.kavin.rocks";
+        // LIST OF BACKUP INSTANCES
+        const INSTANCES = [
+            "https://pipedapi.kavin.rocks",
+            "https://pipedapi.leptons.xyz",
+            "https://pipedapi.nosebs.ru",
+            "https://piped-api.privacy.com.de"
+        ];
 
         async function loadFeed() {
             const feed = document.getElementById('main-feed');
-            feed.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Vibe-checking the servers...</p>';
-
-            try {
-                const response = await fetch(`${API_BASE}/trending?region=US`);
-                const videos = await response.json();
-                
-                feed.innerHTML = ''; // Clear loading message
-
-                videos.forEach(video => {
-                    // Logic to filter out "Buns" (Shorts)
-                    // Piped usually marks them, or we check duration
-                    if (video.duration < 60) return; 
-
-                    const card = document.createElement('div');
-                    card.className = 'video-card';
+            
+            for (let baseUrl of INSTANCES) {
+                try {
+                    feed.innerHTML = `<div class="status-msg">Trying instance: ${baseUrl.split('//')[1]}...</div>`;
                     
-                    // Constructing the card
-                    card.innerHTML = `
-                        <div class="thumbnail-container">
-                            <img src="${video.thumbnail}" loading="lazy">
-                            <div class="duration">${formatTime(video.duration)}</div>
-                        </div>
-                        <div class="video-info">
-                            <h3 class="video-title">${video.title}</h3>
-                            <div class="video-meta">
-                                <span>${video.uploaderName}</span> • 
-                                <span>${video.uploadedDate}</span>
-                            </div>
-                        </div>
-                    `;
-
-                    // Make it clickable (Opening in Piped for now)
-                    card.onclick = () => {
-                        window.open(`https://piped.video${video.url}`, '_blank');
-                    };
-
-                    feed.appendChild(card);
-                });
-            } catch (err) {
-                feed.innerHTML = `<p style="color: red;">Instance down. Check console.</p>`;
-                console.error(err);
+                    const response = await fetch(`${baseUrl}/trending?region=US`);
+                    if (!response.ok) throw new Error("Server error");
+                    
+                    const videos = await response.json();
+                    renderVideos(videos);
+                    return; // EXIT loop if successful!
+                } catch (err) {
+                    console.log(`${baseUrl} failed, trying next...`);
+                }
             }
+            feed.innerHTML = `<div class="status-msg" style="color:red">All instances are currently busy. Try again in 5 mins.</div>`;
         }
 
-        // Helper to turn seconds into 00:00 format
-        function formatTime(seconds) {
-            if (!seconds) return "??:??";
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            const s = seconds % 60;
-            return [h, m, s]
-                .filter((v, i) => v > 0 || i > 0)
-                .map(v => v.toString().padStart(2, '0'))
-                .join(':');
+        function renderVideos(videos) {
+            const feed = document.getElementById('main-feed');
+            feed.innerHTML = ''; 
+            
+            videos.forEach(video => {
+                if (video.duration < 60) return; // Nuke the Shorts
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <img src="${video.thumbnail}" loading="lazy">
+                    <div class="video-info">
+                        <h3 class="video-title">${video.title}</h3>
+                        <p style="font-size:0.8rem; color:#888">${video.uploaderName}</p>
+                    </div>
+                `;
+                card.onclick = () => window.open(`https://piped.video${video.url}`, '_blank');
+                feed.appendChild(card);
+            });
         }
 
-        // Initial Load
         loadFeed();
     </script>
 </body>

@@ -2,110 +2,160 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Video Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Client Pro</title>
     <style>
-        body { background: #0f0f0f; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: #1a1a1a; border-radius: 8px; overflow: hidden; cursor: pointer; }
-        .card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
-        .info { padding: 10px; }
-        #error-display { color: #ff4444; background: #220000; padding: 10px; margin-bottom: 20px; display: none; border-radius: 5px; }
+        :root {
+            --bg: #0f0f0f;
+            --text: #ffffff;
+            --grey: #aaaaaa;
+            --border: #3f3f3f;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: "Roboto", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        .thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            object-fit: cover;
+            background: #222;
+        }
+
+        .info {
+            margin-top: 12px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .meta {
+            color: var(--grey);
+            font-size: 14px;
+        }
+
+        #error-msg {
+            color: #ff4d4d;
+            background: #2a0000;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Home</h1>
-    <div id="error-display"></div>
-    <div id="main-grid" class="grid">Loading videos...</div>
+    <div class="header">
+        <h1 style="margin:0; font-size: 24px;">Home</h1>
+        <div id="status" style="font-size: 12px; color: var(--grey);">API Connected</div>
+    </div>
+
+    <div id="error-msg"></div>
+    <div class="grid" id="video-grid">Loading from Google...</div>
 
     <script>
-        const displayError = (msg) => {
-            const el = document.getElementById('error-display');
-            el.style.display = 'block';
-            el.innerHTML = `<strong>Error:</strong> ${msg}`;
-        };
-
-        async function init() {
-            const grid = document.getElementById('main-grid');
-            // Testing the most reliable 2026 instance
-            const api_url = "https://inv.tux.pizza/api/v1/trending";
-
-            try {
-                const response = await fetch(api_url);
-                if (!response.ok) throw new Error("Server rejected the request.");
-                
-                const data = await response.json();
-                
-                if (!data || data.length === 0) {
-                    grid.innerHTML = "No videos found.";
-                    return;
-                }
-
-                grid.innerHTML = "";
-                data.forEach(v => {
-                    const card = document.createElement('div');
-                    card.className = "card";
-                    card.innerHTML = `
-                        <img src="${v.videoThumbnails[0].url}">
-                        <d<script>
-    const grid = document.getElementById('main-grid');
-    const errorEl = document.getElementById('error-display');
-
-    // These are the most stable Invidious instances for 2026
-    const INSTANCES = [
-        "https://inv.tux.pizza",
-        "https://invidious.lunar.icu",
-        "https://iv.melmac.space",
-        "https://invidious.projectsegfau.lt"
-    ];
-
-    async function init() {
-        grid.innerHTML = "Searching for a live connection...";
+        // PASTE YOUR KEY HERE
+        const API_KEY = 'c70591944amsh5ed1a51bb71f9bap10fecbjsna01303cb8c1f'; 
         
-        for (let base of INSTANCES) {
-            try {
-                // Using 'allorigins' to wrap the request and bypass CORS blocks
-                const target = `${base}/api/v1/trending?region=US`;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
-                
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error("Next...");
+        async function fetchTrending() {
+            const grid = document.getElementById('video-grid');
+            const errorBox = document.getElementById('error-msg');
 
-                const wrapper = await response.json();
-                const data = JSON.parse(wrapper.contents);
+            try {
+                // Fetching top 24 popular videos in the US
+                const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=US&maxResults=24&key=${API_KEY}`;
                 
-                if (data && data.length > 0) {
-                    render(data);
-                    return; // Stop once we find a working one!
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
                 }
+
+                grid.innerHTML = '';
+                
+                data.items.forEach(video => {
+                    // Logic to hide "Shorts" (Checking if duration is less than 60s)
+                    // Note: YouTube duration is in ISO 8601 format (e.g., PT1M30S)
+                    const duration = video.contentDetails.duration;
+                    if (isShort(duration)) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img class="thumb" src="${video.snippet.thumbnails.high.url}" loading="lazy">
+                        <div class="info">
+                            <div class="title">${video.snippet.title}</div>
+                            <div class="meta">${video.snippet.channelTitle}</div>
+                            <div class="meta">${formatViews(video.statistics.viewCount)} views</div>
+                        </div>
+                    `;
+                    
+                    // Open in the official player for now
+                    card.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank');
+                    grid.appendChild(card);
+                });
+
             } catch (err) {
-                console.log(`Skipping ${base} - busy or blocked.`);
+                errorBox.style.display = 'block';
+                errorBox.innerText = "API Error: " + err.message;
+                grid.innerHTML = "Failed to load feed.";
             }
         }
-        
-        grid.innerHTML = "All instances are busy. Try clicking 'Refresh' in a minute.";
-    }
 
-    function render(videos) {
-        grid.innerHTML = "";
-        videos.forEach(v => {
-            const card = document.createElement('div');
-            card.className = "card";
-            const thumb = v.videoThumbnails ? v.videoThumbnails[0].url : "";
-            
-            card.innerHTML = `
-                <img src="${thumb}" onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumb'">
-                <div class="info">
-                    <div style="font-weight:bold; font-size: 14px; margin-bottom: 4px;">${v.title}</div>
-                    <div style="color:#aaa; font-size:12px">${v.author}</div>
-                </div>
-            `;
-            card.onclick = () => window.open(`https://www.youtube.com/watch?v=${v.videoId}`, '_blank');
-            grid.appendChild(card);
-        });
-    }
+        // Helper: Format views like "1.2M"
+        function formatViews(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num;
+        }
 
-    init();
-</script>
+        // Helper: Check if ISO duration is a "Short"
+        function isShort(duration) {
+            // Very basic check: if it doesn't have "M" (minutes) or "H" (hours), it's likely a short
+            return !duration.includes('M') && !duration.includes('H');
+        }
+
+        fetchTrending();
+    </script>
 </body>
 </html>
